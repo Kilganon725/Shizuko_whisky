@@ -522,31 +522,45 @@ function HeroSection({
 function FlavorWheelSection() {
   const [active, setActive] = useState(flavors[0])
   const wheelRef = useRef<HTMLDivElement>(null!)
+  const stageRef = useRef<HTMLDivElement>(null!)
 
   useEffect(() => {
     gsap.fromTo(
       wheelRef.current,
-      { scale: 0.88, rotate: -14, opacity: 0 },
-      { scale: 1, rotate: 0, opacity: 1, duration: 1.1, ease: 'expo.out' },
+      { scale: 0.95, rotate: -3, opacity: 0, y: 24 },
+      { scale: 1, rotate: 0, opacity: 1, y: 0, duration: 1.1, ease: 'expo.out' },
     )
   }, [])
 
+  useEffect(() => {
+    if (!stageRef.current) return
+    gsap.fromTo(
+      stageRef.current.querySelectorAll('[data-flavor-hero]'),
+      { opacity: 0.62, y: 10 },
+      { opacity: 1, y: 0, duration: 0.45, stagger: 0.04, ease: 'power3.out' },
+    )
+  }, [active.id])
+
   return (
     <section id="flavor" className="relative overflow-hidden py-24">
+      <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+      <div className="absolute left-1/2 top-0 h-[460px] w-[460px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(232,181,71,0.18),transparent_68%)] blur-3xl" />
       <div className="section-shell">
-        <div className="mb-10 flex items-end justify-between gap-6">
-          <div>
-            <p className="text-xs uppercase tracking-[0.55em] text-gold/75">Flavor Wheel</p>
+        <div className="mb-10 grid gap-4 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+          <div className="max-w-2xl">
+            <p className="text-xs uppercase tracking-[0.55em] text-gold/75">Flavor Compass</p>
             <h2 className="mt-3 text-3xl font-semibold text-white md:text-5xl">风味轮盘</h2>
           </div>
-          <p className="max-w-xl text-sm leading-7 text-white/60">
-            轮盘扇区从液体流体中“凝固”出来，hover 即可切换风味、烟雾、背景与描述。
+          <p className="max-w-xl text-sm leading-7 text-white/60 lg:justify-self-end">
+            这一段改成更像一张“风味航海图”：
+            中央是当前酒体，外圈是四个方向的风味锚点，hover 即可整体换色、换光感和换叙述。
           </p>
         </div>
 
         <div
           ref={wheelRef}
-          className="glass-panel grid gap-8 overflow-hidden rounded-[2.5rem] p-6 shadow-soft lg:grid-cols-[1.1fr_0.9fr]"
+          className="glass-panel relative overflow-hidden rounded-[3rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02)),radial-gradient(circle_at_50%_12%,rgba(255,255,255,0.08),transparent_28%),linear-gradient(135deg,rgba(17,11,9,0.9),rgba(8,7,10,0.98))] p-5 shadow-soft md:p-6"
           style={
             {
               '--wheel-tint': active.tint,
@@ -554,77 +568,191 @@ function FlavorWheelSection() {
             } as React.CSSProperties
           }
         >
-          <div className="relative min-h-[520px] rounded-[2rem] border border-white/10 bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.08),transparent_18%),linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.05))]">
+          <div className="grid gap-5 lg:grid-cols-[1.08fr_0.92fr]">
             <div
-              className="absolute inset-0 opacity-80"
-              style={{
-                background: `radial-gradient(circle at 50% 50%, ${active.tint}2a, transparent 36%), radial-gradient(circle at 50% 50%, ${active.accent}22, transparent 15%), linear-gradient(180deg, rgba(255,255,255,0.06), transparent 70%)`,
-              }}
-            />
-            <div className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 items-center justify-center">
-              <div className="h-52 w-52 rounded-full border border-white/10 bg-black/25 shadow-[0_0_120px_rgba(255,255,255,0.08)]">
-                <div
-                  className="absolute inset-[16%] rounded-full blur-xl"
-                  style={{
-                    background: `radial-gradient(circle, ${active.accent}aa 0%, ${active.tint}66 30%, transparent 70%)`,
-                  }}
-                />
-                <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_50%_50%,rgba(255,255,255,0.12),transparent_55%)]" />
-                <div className="absolute inset-0 animate-[spin_28s_linear_infinite] rounded-full border border-white/5" />
-              </div>
-            </div>
-            <svg viewBox="0 0 100 100" className="absolute inset-0 h-full w-full">
-              {flavors.map((item, index) => {
-                const start = index * 90
-                const end = start + 90
-                const path = sectorPath(50, 50, 35, start, end)
-                const isActive = active.id === item.id
-                return (
-                  <path
-                    key={item.id}
-                    d={path}
-                    fill={isActive ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.05)'}
-                    stroke={isActive ? item.accent : 'rgba(255,255,255,0.08)'}
-                    strokeWidth={isActive ? 0.8 : 0.45}
-                    className="cursor-pointer transition duration-300 hover:brightness-125"
-                    onMouseEnter={() => setActive(item)}
-                  />
-                )
-              })}
-              <circle cx="50" cy="50" r="15" fill="rgba(10,8,8,0.8)" stroke="rgba(255,255,255,0.12)" />
-            </svg>
-          </div>
+              ref={stageRef}
+              className="relative min-h-[620px] overflow-hidden rounded-[2.4rem] border border-white/10 bg-[radial-gradient(circle_at_50%_20%,rgba(255,255,255,0.1),transparent_18%),linear-gradient(180deg,rgba(255,255,255,0.03),rgba(255,255,255,0.01))]"
+            >
+              <div
+                className="absolute inset-0 opacity-95"
+                style={{
+                  background: `radial-gradient(circle at 50% 50%, ${active.tint}34 0%, transparent 36%), radial-gradient(circle at 50% 50%, ${active.accent}26 0%, transparent 18%), linear-gradient(180deg, rgba(255,255,255,0.06), transparent 72%)`,
+                }}
+              />
+              <div className="absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),transparent)] opacity-60" />
 
-          <div className="flex flex-col justify-between gap-6 rounded-[2rem] border border-white/10 bg-black/20 p-6">
-            <div>
-              <p className="text-xs uppercase tracking-[0.45em] text-white/40">Active flavor</p>
-              <div className="mt-4 flex items-end gap-3">
-                <h3 className="text-4xl font-semibold">{active.name}</h3>
-                <span className="pb-1 text-xs uppercase tracking-[0.45em] text-white/35">{active.short}</span>
+              <div className="absolute left-6 top-6 flex items-center gap-3">
+                <span
+                  className="h-2.5 w-2.5 rounded-full"
+                  style={{ background: active.accent, boxShadow: `0 0 18px ${active.accent}cc` }}
+                />
+                <span className="text-[11px] uppercase tracking-[0.5em] text-white/45">Tasting compass</span>
               </div>
-              <p className="mt-6 max-w-md text-sm leading-7 text-white/70">{active.description}</p>
-            </div>
-            <div className="grid gap-3">
-              {flavors.map((item) => (
-                <button
-                  key={item.id}
-                  className={`flex items-center justify-between rounded-2xl border px-4 py-4 text-left transition ${
-                    active.id === item.id
-                      ? 'border-white/20 bg-white/10'
-                      : 'border-white/8 bg-white/[0.03] hover:bg-white/[0.06]'
-                  }`}
-                  onMouseEnter={() => setActive(item)}
-                >
-                  <span>
-                    <span className="block text-sm text-white">{item.name}</span>
-                    <span className="block text-xs uppercase tracking-[0.3em] text-white/35">{item.short}</span>
-                  </span>
-                  <span
-                    className="h-3 w-3 rounded-full"
-                    style={{ background: item.accent, boxShadow: `0 0 18px ${item.accent}aa` }}
+              <div className="absolute right-6 top-6 text-right text-[11px] uppercase tracking-[0.45em] text-white/35">
+                <div data-flavor-hero>{`0${flavors.findIndex((item) => item.id === active.id) + 1}`.slice(-2)}</div>
+                <div data-flavor-hero className="mt-2 text-white/55">
+                  / 04
+                </div>
+              </div>
+
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="relative h-[360px] w-[360px] md:h-[400px] md:w-[400px]">
+                  <div
+                    className="absolute inset-0 rounded-full border border-white/10"
+                    style={{
+                      background: `radial-gradient(circle, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 44%, transparent 72%)`,
+                      boxShadow: `inset 0 0 80px ${active.tint}22, 0 0 120px rgba(0,0,0,0.22)`,
+                    }}
                   />
-                </button>
-              ))}
+                  <div className="absolute inset-[7%] animate-[spin_36s_linear_infinite] rounded-full border border-white/5" />
+                  <div
+                    className="absolute inset-[15%] rounded-full blur-2xl"
+                    style={{
+                      background: `radial-gradient(circle, ${active.accent}55 0%, ${active.tint}28 35%, transparent 72%)`,
+                    }}
+                  />
+                  <div className="absolute inset-[28%] rounded-full border border-white/10 bg-black/35 shadow-[0_0_100px_rgba(0,0,0,0.35)]">
+                    <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_50%_35%,rgba(255,255,255,0.2),transparent_46%)]" />
+                    <div className="absolute inset-0 rounded-full bg-[radial-gradient(circle_at_50%_80%,rgba(255,255,255,0.08),transparent_52%)]" />
+                    <div className="absolute inset-[18%] rounded-full border border-white/10" />
+                    <div className="absolute inset-[28%] rounded-full border border-white/5" />
+                  </div>
+                  <div className="absolute inset-[40%] rounded-full border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.08),rgba(255,255,255,0.02))] shadow-[0_0_40px_rgba(0,0,0,0.3)]" />
+                  <div
+                    className="absolute left-1/2 top-1/2 h-[42%] w-[42%] -translate-x-1/2 -translate-y-1/2 rounded-full border border-white/10"
+                    style={{
+                      background: `radial-gradient(circle, ${active.accent}16 0%, rgba(0,0,0,0.55) 58%)`,
+                    }}
+                  />
+
+                  {flavors.map((item, index) => {
+                    const slotClasses = [
+                      'left-1/2 top-0 -translate-x-1/2 -translate-y-2',
+                      'right-0 top-1/2 -translate-y-1/2 translate-x-2',
+                      'left-1/2 bottom-0 -translate-x-1/2 translate-y-2',
+                      'left-0 top-1/2 -translate-y-1/2 -translate-x-2',
+                    ]
+                    const arcClasses = [
+                      'top-10 left-1/2 h-28 w-[2px] -translate-x-1/2',
+                      'right-10 top-1/2 h-[2px] w-28 -translate-y-1/2',
+                      'bottom-10 left-1/2 h-28 w-[2px] -translate-x-1/2',
+                      'left-10 top-1/2 h-[2px] w-28 -translate-y-1/2',
+                    ]
+                    const isActive = active.id === item.id
+                    return (
+                      <button
+                        key={item.id}
+                        className={`group absolute ${slotClasses[index]} w-[168px] rounded-[1.35rem] border px-4 py-3 text-left backdrop-blur-md transition duration-300 ${
+                          isActive
+                            ? 'border-white/20 bg-white/12 shadow-[0_12px_40px_rgba(0,0,0,0.22)]'
+                            : 'border-white/8 bg-black/18 hover:border-white/16 hover:bg-white/[0.08]'
+                        }`}
+                        onMouseEnter={() => setActive(item)}
+                        onFocus={() => setActive(item)}
+                      >
+                        <span
+                          className={`absolute ${arcClasses[index]} rounded-full transition duration-300 ${
+                            isActive ? 'opacity-100' : 'opacity-45 group-hover:opacity-80'
+                          }`}
+                          style={{ background: item.accent, boxShadow: `0 0 20px ${item.accent}88` }}
+                        />
+                        <span className="relative z-10 block">
+                          <span className="block text-[11px] uppercase tracking-[0.35em] text-white/35">{item.short}</span>
+                          <span className="mt-2 block text-base font-semibold text-white">{item.name}</span>
+                        </span>
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className="absolute bottom-5 left-5 right-5 grid gap-3 md:grid-cols-[1.2fr_0.8fr]">
+                <div className="rounded-[1.5rem] border border-white/10 bg-black/22 p-4 backdrop-blur-md">
+                  <p data-flavor-hero className="text-[11px] uppercase tracking-[0.45em] text-white/35">
+                    Active flavor
+                  </p>
+                  <div className="mt-3 flex items-end gap-3">
+                    <h3 data-flavor-hero className="text-3xl font-semibold text-white md:text-4xl">
+                      {active.name}
+                    </h3>
+                    <span className="pb-1 text-xs uppercase tracking-[0.45em] text-white/35">{active.short}</span>
+                  </div>
+                  <p data-flavor-hero className="mt-4 max-w-xl text-sm leading-7 text-white/70">
+                    {active.description}
+                  </p>
+                </div>
+
+                <div className="grid gap-3 rounded-[1.5rem] border border-white/10 bg-black/18 p-4 backdrop-blur-md">
+                  <div className="flex items-center justify-between text-[11px] uppercase tracking-[0.35em] text-white/35">
+                    <span>Intensity</span>
+                    <span>Layered</span>
+                  </div>
+                  <div className="h-2 overflow-hidden rounded-full bg-white/8">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${50 + indexFromFlavor(active.id) * 12}%`, background: `linear-gradient(90deg, ${active.tint}, ${active.accent})` }}
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-[11px] uppercase tracking-[0.28em] text-white/35">
+                    <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-center">Aroma</span>
+                    <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-center">Body</span>
+                    <span className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-2 text-center">Finish</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-col justify-between gap-4 rounded-[2.2rem] border border-white/10 bg-black/18 p-4 md:p-5">
+              <div className="rounded-[1.5rem] border border-white/10 bg-white/[0.03] p-4">
+                <p className="text-xs uppercase tracking-[0.45em] text-white/35">Selected profile</p>
+                <div className="mt-4 flex items-end gap-3">
+                  <h3 className="text-3xl font-semibold text-white">{active.name}</h3>
+                  <span className="pb-1 text-xs uppercase tracking-[0.45em] text-white/35">{active.short}</span>
+                </div>
+                <p className="mt-5 max-w-md text-sm leading-7 text-white/68">{active.description}</p>
+              </div>
+
+              <div className="grid gap-3">
+                {flavors.map((item, index) => (
+                  <button
+                    key={item.id}
+                    className={`group rounded-[1.4rem] border px-4 py-4 text-left transition duration-300 ${
+                      active.id === item.id
+                        ? 'border-white/20 bg-white/[0.09]'
+                        : 'border-white/8 bg-white/[0.03] hover:border-white/14 hover:bg-white/[0.06]'
+                    }`}
+                    onMouseEnter={() => setActive(item)}
+                    onFocus={() => setActive(item)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="h-10 w-10 rounded-full border border-white/10"
+                        style={{
+                          background: `radial-gradient(circle, ${item.accent}cc 0%, ${item.tint}99 48%, rgba(255,255,255,0.08) 100%)`,
+                          boxShadow: `0 0 24px ${item.accent}44`,
+                        }}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-4">
+                          <span className="text-sm font-semibold text-white">{item.name}</span>
+                          <span className="text-[11px] uppercase tracking-[0.3em] text-white/28">{`0${index + 1}`}</span>
+                        </div>
+                        <span className="mt-1 block text-[11px] uppercase tracking-[0.35em] text-white/35">
+                          {item.short}
+                        </span>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-sm leading-6 text-white/60">{item.description}</p>
+                  </button>
+                ))}
+              </div>
+
+              <div className="rounded-[1.5rem] border border-white/10 bg-[linear-gradient(135deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02))] p-4">
+                <p className="text-xs uppercase tracking-[0.45em] text-white/35">Hover behaviour</p>
+                <p className="mt-3 text-sm leading-7 text-white/65">
+                  左侧负责“场景感”，右侧负责“阅读感”。鼠标划过任一方向，整个区块会重新着色，避免现在那种单纯圆盘的平面感。
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -766,15 +894,11 @@ function PurchaseSection() {
   )
 }
 
-function sectorPath(cx: number, cy: number, r: number, start: number, end: number) {
-  const startRad = ((start - 90) * Math.PI) / 180
-  const endRad = ((end - 90) * Math.PI) / 180
-  const x1 = cx + r * Math.cos(startRad)
-  const y1 = cy + r * Math.sin(startRad)
-  const x2 = cx + r * Math.cos(endRad)
-  const y2 = cy + r * Math.sin(endRad)
-  const large = end - start <= 180 ? 0 : 1
-  return `M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2} Z`
+function indexFromFlavor(id: string) {
+  return Math.max(
+    0,
+    flavors.findIndex((item) => item.id === id),
+  )
 }
 
 export default function App() {
