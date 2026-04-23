@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Canvas, useFrame } from '@react-three/fiber'
 import { Html, OrbitControls } from '@react-three/drei'
 import * as THREE from 'three'
@@ -105,6 +105,97 @@ function useMousePosition() {
     return () => window.removeEventListener('mousemove', onMove)
   }, [])
   return pos
+}
+
+function useGlobalMotion() {
+  useEffect(() => {
+    const root = document.documentElement
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    const setVars = (x: number, y: number, progress: number) => {
+      root.style.setProperty('--motion-x', x.toFixed(4))
+      root.style.setProperty('--motion-y', y.toFixed(4))
+      root.style.setProperty('--scroll-progress', progress.toFixed(4))
+    }
+
+    if (reduced) {
+      setVars(0, 0, 0)
+      return
+    }
+
+    let targetX = 0
+    let targetY = 0
+    let currentX = 0
+    let currentY = 0
+    let scrollProgress = 0
+    let frame = 0
+
+    const updateScroll = () => {
+      const maxScroll = Math.max(document.documentElement.scrollHeight - window.innerHeight, 1)
+      scrollProgress = THREE.MathUtils.clamp(window.scrollY / maxScroll, 0, 1)
+      root.style.setProperty('--scroll-progress', scrollProgress.toFixed(4))
+    }
+
+    const onMouseMove = (event: MouseEvent) => {
+      targetX = (event.clientX / window.innerWidth) * 2 - 1
+      targetY = (event.clientY / window.innerHeight) * 2 - 1
+    }
+
+    const tick = () => {
+      currentX += (targetX - currentX) * 0.08
+      currentY += (targetY - currentY) * 0.08
+      setVars(currentX, currentY, scrollProgress)
+      frame = window.requestAnimationFrame(tick)
+    }
+
+    updateScroll()
+    window.addEventListener('mousemove', onMouseMove, { passive: true })
+    window.addEventListener('scroll', updateScroll, { passive: true })
+    window.addEventListener('resize', updateScroll)
+    frame = window.requestAnimationFrame(tick)
+
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove)
+      window.removeEventListener('scroll', updateScroll)
+      window.removeEventListener('resize', updateScroll)
+      window.cancelAnimationFrame(frame)
+    }
+  }, [])
+}
+
+function useRevealOnScroll() {
+  useLayoutEffect(() => {
+    const nodes = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'))
+    if (!nodes.length) return
+
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    if (reduced) {
+      gsap.set(nodes, { opacity: 1, y: 0, filter: 'none' })
+      return
+    }
+
+    gsap.set(nodes, { opacity: 0, y: 24, filter: 'blur(10px)' })
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return
+          observer.unobserve(entry.target)
+          gsap.to(entry.target, {
+            opacity: 1,
+            y: 0,
+            filter: 'blur(0px)',
+            duration: 0.9,
+            ease: 'power3.out',
+          })
+        })
+      },
+      { threshold: 0.16, rootMargin: '0px 0px -8% 0px' },
+    )
+
+    nodes.forEach((node) => observer.observe(node))
+    return () => observer.disconnect()
+  }, [])
 }
 
 function LiquidShader({ color = '#C87533', accent = '#E8B547' }: { color?: string; accent?: string }) {
@@ -241,6 +332,21 @@ function HeroBackdrop() {
         <LiquidShader />
       </Suspense>
     </Canvas>
+  )
+}
+
+function GlobalMotionLayer() {
+  return (
+    <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
+      <div className="motion-orb motion-orb-a" />
+      <div className="motion-orb motion-orb-b" />
+      <div className="motion-orb motion-orb-c" />
+      <div className="motion-grid" />
+      <div className="motion-scanline" />
+      <div className="motion-progress-track">
+        <div className="motion-progress-bar" />
+      </div>
+    </div>
   )
 }
 
@@ -464,7 +570,7 @@ function HeroSection({
       <HeroBackdrop />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.05),transparent_24%),linear-gradient(120deg,rgba(0,0,0,0.3),rgba(0,0,0,0.15)_30%,rgba(0,0,0,0.62))]" />
       <div className="section-shell relative z-10 grid min-h-screen items-center py-10 lg:grid-cols-[1.1fr_0.9fr]">
-        <div className="flex items-start gap-6 lg:gap-8">
+        <div data-reveal className="flex items-start gap-6 lg:gap-8">
           <div className="pt-10 text-[11px] uppercase tracking-[0.6em] text-white/50">
             <div className="vertical-rl h-[320px] font-display text-2xl tracking-[0.25em] text-[#f3e8d8]">
               静水
@@ -499,11 +605,12 @@ function HeroSection({
         </div>
 
         <div
-          className="relative flex min-h-[72vh] items-center justify-center"
+          data-reveal
+          className="relative flex min-h-[72vh] items-center justify-center motion-float-strong"
           onMouseEnter={() => onBottleHover(true)}
           onMouseLeave={() => onBottleHover(false)}
         >
-          <div className="absolute inset-8 rounded-[3rem] bg-[radial-gradient(circle_at_50%_28%,rgba(232,181,71,0.14),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.06),transparent_42%)] blur-2xl" />
+          <div className="absolute inset-8 rounded-[3rem] bg-[radial-gradient(circle_at_50%_28%,rgba(232,181,71,0.14),transparent_32%),linear-gradient(180deg,rgba(255,255,255,0.06),transparent_42%)] blur-2xl motion-float-slow" />
           <Canvas className="relative z-10 h-[680px] w-full" camera={{ position: [0, 0.1, 6], fov: 34 }} dpr={[1, 1.6]}>
             <ambientLight intensity={0.7} />
             <directionalLight position={[-4, 5, 5]} intensity={2.9} color="#ffd69b" />
@@ -547,7 +654,7 @@ function FlavorWheelSection() {
       <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
       <div className="absolute left-1/2 top-0 h-[460px] w-[460px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(232,181,71,0.18),transparent_68%)] blur-3xl" />
       <div className="section-shell">
-        <div className="mb-10 grid gap-4 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
+        <div data-reveal className="mb-10 grid gap-4 lg:grid-cols-[1.1fr_0.9fr] lg:items-end">
           <div className="max-w-2xl">
             <p className="text-xs uppercase tracking-[0.55em] text-gold/75">Flavor Compass</p>
             <h2 className="mt-3 text-3xl font-semibold text-white md:text-5xl">风味轮盘</h2>
@@ -560,6 +667,7 @@ function FlavorWheelSection() {
 
         <div
           ref={wheelRef}
+          data-reveal
           className="glass-panel relative overflow-hidden rounded-[3rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02)),radial-gradient(circle_at_50%_12%,rgba(255,255,255,0.08),transparent_28%),linear-gradient(135deg,rgba(17,11,9,0.9),rgba(8,7,10,0.98))] p-5 shadow-soft md:p-6"
           style={
             {
@@ -765,7 +873,7 @@ function CraftSection() {
   return (
     <section id="craft" className="py-24">
       <div className="section-shell">
-        <div className="mb-10 flex items-end justify-between gap-6">
+        <div data-reveal className="mb-10 flex items-end justify-between gap-6">
           <div>
             <p className="text-xs uppercase tracking-[0.55em] text-gold/75">Process</p>
             <h2 className="mt-3 text-3xl font-semibold text-white md:text-5xl">酿造工艺</h2>
@@ -777,8 +885,8 @@ function CraftSection() {
 
         <div className="overflow-x-auto pb-6">
           <div className="flex min-w-max gap-5">
-            {steps.map((step, index) => (
-              <article key={step.title} className="w-[320px] shrink-0 rounded-[2rem] border border-white/10 bg-white/[0.03] p-4">
+          {steps.map((step, index) => (
+              <article data-reveal key={step.title} className="w-[320px] shrink-0 rounded-[2rem] border border-white/10 bg-white/[0.03] p-4">
                 <div className="flex h-[320px] items-end overflow-hidden rounded-[1.5rem] border border-white/10 bg-[linear-gradient(180deg,rgba(255,255,255,0.16),rgba(255,255,255,0.03)),radial-gradient(circle_at_50%_20%,rgba(255,255,255,0.18),transparent_30%)]">
                   <div className="flex h-full w-full items-center justify-center bg-[linear-gradient(135deg,rgba(255,255,255,0.18),rgba(255,255,255,0.02))]">
                     <div className="text-[160px] font-semibold leading-none text-black/70 mix-blend-screen">{step.image}</div>
@@ -835,7 +943,7 @@ function ProductsSection() {
   return (
     <section id="products" className="py-24">
       <div className="section-shell">
-        <div className="mb-10 flex items-end justify-between gap-6">
+        <div data-reveal className="mb-10 flex items-end justify-between gap-6">
           <div>
             <p className="text-xs uppercase tracking-[0.55em] text-gold/75">Collection</p>
             <h2 className="mt-3 text-3xl font-semibold text-white md:text-5xl">产品系列</h2>
@@ -847,7 +955,9 @@ function ProductsSection() {
 
         <div className="grid gap-5 lg:grid-cols-3">
           {products.map((product, index) => (
-            <ProductCard key={product.name} product={product} index={index} />
+            <div data-reveal key={product.name}>
+              <ProductCard product={product} index={index} />
+            </div>
           ))}
         </div>
       </div>
@@ -859,7 +969,7 @@ function PurchaseSection() {
   return (
     <section id="purchase" className="py-24">
       <div className="section-shell grid gap-10 lg:grid-cols-[0.92fr_1.08fr]">
-        <div className="glass-panel rounded-[2.5rem] border border-white/10 p-8">
+        <div data-reveal className="glass-panel rounded-[2.5rem] border border-white/10 p-8">
           <p className="text-xs uppercase tracking-[0.55em] text-gold/75">Buy</p>
           <h2 className="mt-4 text-3xl font-semibold text-white md:text-5xl">购买区</h2>
           <div className="mt-8 flex items-center gap-4">
@@ -875,7 +985,7 @@ function PurchaseSection() {
           </p>
         </div>
 
-        <div className="rounded-[2.5rem] border border-white/10 bg-white/[0.03] p-8">
+        <div data-reveal className="rounded-[2.5rem] border border-white/10 bg-white/[0.03] p-8">
           <p className="text-xs uppercase tracking-[0.55em] text-gold/75">Brand Story</p>
           <div className="mt-5 space-y-5 text-sm leading-8 text-white/68">
             <p>
@@ -902,6 +1012,8 @@ function indexFromFlavor(id: string) {
 }
 
 export default function App() {
+  useGlobalMotion()
+  useRevealOnScroll()
   const [bottleHover, setBottleHover] = useState(false)
   const [scroll, setScroll] = useState(0)
   const [wheel, setWheel] = useState(0)
@@ -932,27 +1044,30 @@ export default function App() {
   }, [])
 
   return (
-    <div className="relative min-h-screen">
-      <div className="noise" />
+    <div className="relative isolate min-h-screen">
+      <GlobalMotionLayer />
+      <div className="noise z-10" />
       <IceCursor active={bottleHover} />
-      <HeroSection onBottleHover={setBottleHover} bottleHover={bottleHover} wheel={wheel} />
-      <div className="border-y border-white/5 bg-white/[0.015] py-4">
+      <div className="relative z-20">
+        <HeroSection onBottleHover={setBottleHover} bottleHover={bottleHover} wheel={wheel} />
+        <div data-reveal className="border-y border-white/5 bg-white/[0.015] py-4">
         <div className="section-shell flex flex-wrap items-center justify-between gap-4 text-[11px] uppercase tracking-[0.45em] text-white/40">
           <span>Small batch distillery</span>
           <span>Scroll / Hover / Explore</span>
           <span>Japanese craftsmanship</span>
         </div>
-      </div>
-      <FlavorWheelSection />
-      <CraftSection />
-      <ProductsSection />
-      <PurchaseSection />
-      <footer className="pb-12 pt-6">
-        <div className="section-shell flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs uppercase tracking-[0.35em] text-white/28">
-          <span>Shizuko Whisky</span>
-          <span>Traditional spirit, contemporary restraint</span>
         </div>
-      </footer>
+        <FlavorWheelSection />
+        <CraftSection />
+        <ProductsSection />
+        <PurchaseSection />
+        <footer className="pb-12 pt-6">
+          <div data-reveal className="section-shell flex flex-wrap items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs uppercase tracking-[0.35em] text-white/28">
+            <span>Shizuko Whisky</span>
+            <span>Traditional spirit, contemporary restraint</span>
+          </div>
+        </footer>
+      </div>
     </div>
   )
 }

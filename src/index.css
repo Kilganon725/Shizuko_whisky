@@ -7,6 +7,9 @@
   --bg: #0b0908;
   --panel: rgba(11, 9, 8, 0.7);
   --ink: #f3e8d8;
+  --motion-x: 0;
+  --motion-y: 0;
+  --scroll-progress: 0;
 }
 
 html {
@@ -43,6 +46,118 @@ body {
     linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
   background-size: 3px 3px;
   mix-blend-mode: soft-light;
+}
+
+.motion-orb {
+  position: fixed;
+  pointer-events: none;
+  border-radius: 9999px;
+  filter: blur(90px);
+  mix-blend-mode: screen;
+  opacity: 0.78;
+  will-change: transform;
+}
+
+.motion-orb-a {
+  left: -10vw;
+  top: 8vh;
+  width: 30vw;
+  height: 30vw;
+  background: radial-gradient(circle, rgba(240, 212, 154, 0.18), transparent 70%);
+  transform: translate3d(calc(var(--motion-x) * 24px), calc(var(--motion-y) * 18px), 0);
+}
+
+.motion-orb-b {
+  right: -12vw;
+  top: 20vh;
+  width: 26vw;
+  height: 26vw;
+  background: radial-gradient(circle, rgba(232, 181, 71, 0.12), transparent 72%);
+  transform: translate3d(calc(var(--motion-x) * -20px), calc(var(--motion-y) * 14px), 0);
+}
+
+.motion-orb-c {
+  left: 28vw;
+  bottom: -16vh;
+  width: 34vw;
+  height: 34vw;
+  background: radial-gradient(circle, rgba(200, 117, 51, 0.1), transparent 74%);
+  transform: translate3d(calc(var(--motion-x) * 14px), calc(var(--motion-y) * -16px), 0);
+}
+
+.motion-grid {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.18;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.8), transparent 72%);
+  transform: translate3d(0, calc(var(--scroll-progress) * -18px), 0);
+}
+
+.motion-scanline {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 160px;
+  pointer-events: none;
+  opacity: 0.2;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent);
+  transform: translate3d(0, calc(var(--scroll-progress) * 118vh), 0);
+}
+
+.motion-progress-track {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 40;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.motion-progress-bar {
+  height: 100%;
+  width: calc(var(--scroll-progress) * 100%);
+  background: linear-gradient(90deg, rgba(232, 181, 71, 0.2), rgba(240, 212, 154, 0.92), rgba(232, 181, 71, 0.2));
+  box-shadow: 0 0 18px rgba(240, 212, 154, 0.5);
+}
+
+.motion-float-slow {
+  transform: translate3d(calc(var(--motion-x) * 10px), calc(var(--motion-y) * 8px), 0);
+  will-change: transform;
+}
+
+.motion-float-medium {
+  transform: translate3d(calc(var(--motion-x) * 18px), calc(var(--motion-y) * 14px), 0);
+  will-change: transform;
+}
+
+.motion-float-strong {
+  transform: translate3d(calc(var(--motion-x) * 28px), calc(var(--motion-y) * 20px), 0);
+  will-change: transform;
+}
+
+.motion-lift {
+  transform: translate3d(0, calc(var(--scroll-progress) * -12px), 0);
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .motion-orb,
+  .motion-grid,
+  .motion-scanline,
+  .motion-progress-bar,
+  .motion-float-slow,
+  .motion-float-medium,
+  .motion-float-strong,
+  .motion-lift {
+    transform: none !important;
+  }
 }
 
 .vertical-rl {
