@@ -48,23 +48,35 @@ const flavors: Flavor[] = [
   },
 ]
 
-const products = [
+export const products = [
   {
+    id: 'kaze',
     name: 'No.01 Kaze',
+    short: 'Kaze',
     note: '麦芽甜感 / 白花 / 清爽',
     price: '¥680',
+    tint: '#a06a1c',
+    accent: '#f0cf6a',
     hue: 'from-amber-300/35 via-transparent to-brown-900/0',
   },
   {
+    id: 'mizu',
     name: 'No.02 Mizu',
+    short: 'Mizu',
     note: '蜂蜜 / 橡木 / 柑橘皮',
     price: '¥920',
+    tint: '#788d46',
+    accent: '#f0e08b',
     hue: 'from-gold-300/35 via-transparent to-brown-900/0',
   },
   {
+    id: 'sumi',
     name: 'No.03 Sumi',
+    short: 'Sumi',
     note: '烟熏 / 香料 / 深色果干',
     price: '¥1,280',
+    tint: '#6b3e2c',
+    accent: '#edb082',
     hue: 'from-stone-300/35 via-transparent to-brown-900/0',
   },
 ]
@@ -107,7 +119,7 @@ function useMousePosition() {
   return pos
 }
 
-function useGlobalMotion() {
+export function useGlobalMotion() {
   useEffect(() => {
     const root = document.documentElement
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -163,7 +175,7 @@ function useGlobalMotion() {
   }, [])
 }
 
-function useRevealOnScroll() {
+export function useRevealOnScroll() {
   useLayoutEffect(() => {
     const nodes = Array.from(document.querySelectorAll<HTMLElement>('[data-reveal]'))
     if (!nodes.length) return
@@ -335,7 +347,7 @@ function HeroBackdrop() {
   )
 }
 
-function GlobalMotionLayer() {
+export function GlobalMotionLayer() {
   return (
     <div aria-hidden className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
       <div className="motion-orb motion-orb-a" />
@@ -350,7 +362,7 @@ function GlobalMotionLayer() {
   )
 }
 
-function Bottle({ active = false, scroll = 0, hover = false, label = 'Shizuko' }: { active?: boolean; scroll?: number; hover?: boolean; label?: string }) {
+export function Bottle({ active = false, scroll = 0, hover = false, label = 'Shizuko' }: { active?: boolean; scroll?: number; hover?: boolean; label?: string }) {
   const group = useRef<THREE.Group>(null!)
   const liquid = useRef<THREE.Mesh>(null!)
   const bottle = useRef<THREE.Mesh>(null!)
@@ -968,21 +980,36 @@ function ProductsSection() {
 function PurchaseSection() {
   return (
     <section id="purchase" className="py-24">
-      <div className="section-shell grid gap-10 lg:grid-cols-[0.92fr_1.08fr]">
+      <div className="section-shell grid gap-10 lg:grid-cols-[1.02fr_0.98fr]">
         <div data-reveal className="glass-panel rounded-[2.5rem] border border-white/10 p-8">
           <p className="text-xs uppercase tracking-[0.55em] text-gold/75">Buy</p>
-          <h2 className="mt-4 text-3xl font-semibold text-white md:text-5xl">购买区</h2>
-          <div className="mt-8 flex items-center gap-4">
-            <button className="h-12 w-12 rounded-full border border-white/10 bg-white/5 text-xl">−</button>
-            <div className="min-w-12 text-center text-lg">01</div>
-            <button className="h-12 w-12 rounded-full border border-white/10 bg-white/5 text-xl">+</button>
-            <button className="ml-4 rounded-full bg-[#f0d49a] px-8 py-3 text-sm tracking-[0.3em] text-black">
-              Add to Cart
-            </button>
-          </div>
-          <p className="mt-6 text-sm leading-7 text-white/60">
-            现货发售，限量批次按季释放。建议搭配冷藏水滴杯或高脚闻香杯，感受香气的前中后段。
+          <h2 className="mt-4 text-3xl font-semibold text-white md:text-5xl">购买页面</h2>
+          <p className="mt-6 max-w-xl text-sm leading-7 text-white/62">
+            购买流程已经单独拆出来，不再塞在首页里。这里保留一个导流入口，点进去会进入完整的选酒、加购和品牌说明页面。
           </p>
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            <a
+              href="./purchase.html"
+              className="rounded-full bg-[#f0d49a] px-8 py-3 text-sm tracking-[0.3em] text-black transition hover:brightness-110"
+            >
+              Open Purchase Page
+            </a>
+            <span className="text-xs uppercase tracking-[0.35em] text-white/35">Dedicated checkout view</span>
+          </div>
+          <div className="mt-8 grid gap-3 sm:grid-cols-3">
+            <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+              <p className="text-[11px] uppercase tracking-[0.4em] text-white/35">Batch</p>
+              <p className="mt-3 text-lg text-white">Small</p>
+            </div>
+            <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+              <p className="text-[11px] uppercase tracking-[0.4em] text-white/35">Lead time</p>
+              <p className="mt-3 text-lg text-white">2-4 days</p>
+            </div>
+            <div className="rounded-[1.25rem] border border-white/10 bg-white/[0.03] p-4">
+              <p className="text-[11px] uppercase tracking-[0.4em] text-white/35">Gift box</p>
+              <p className="mt-3 text-lg text-white">Included</p>
+            </div>
+          </div>
         </div>
 
         <div data-reveal className="rounded-[2.5rem] border border-white/10 bg-white/[0.03] p-8">
@@ -1051,11 +1078,11 @@ export default function App() {
       <div className="relative z-20">
         <HeroSection onBottleHover={setBottleHover} bottleHover={bottleHover} wheel={wheel} />
         <div data-reveal className="border-y border-white/5 bg-white/[0.015] py-4">
-        <div className="section-shell flex flex-wrap items-center justify-between gap-4 text-[11px] uppercase tracking-[0.45em] text-white/40">
-          <span>Small batch distillery</span>
-          <span>Scroll / Hover / Explore</span>
-          <span>Japanese craftsmanship</span>
-        </div>
+          <div className="section-shell flex flex-wrap items-center justify-between gap-4 text-[11px] uppercase tracking-[0.45em] text-white/40">
+            <span>Small batch distillery</span>
+            <span>Scroll / Hover / Explore</span>
+            <span>Japanese craftsmanship</span>
+          </div>
         </div>
         <FlavorWheelSection />
         <CraftSection />
